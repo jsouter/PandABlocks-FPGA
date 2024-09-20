@@ -11,6 +11,7 @@ import cocotb
 import cocotb.handle
 import cocotb.runner
 import cocotb.wavedrom
+import cocotb.binary
 
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, ReadOnly
