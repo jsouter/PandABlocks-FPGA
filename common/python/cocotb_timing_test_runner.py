@@ -40,7 +40,7 @@ async def initialise_dut(dut):
     signals_dict = get_signals_info(dut)
     for signal_name in signals_dict.keys():
         dut_signal_name = signals_dict[signal_name]['name']
-        if not (signals_dict[signal_name]['type'].endswith('_out') 
+        if not (signals_dict[signal_name]['type'].endswith('_out')
                 or 'read' in signals_dict[signal_name]['type']):
             getattr(dut, '{}'.format(dut_signal_name)).value = 0
             wstb_name = signals_dict[signal_name].get('wstb_name', '')
@@ -209,8 +209,8 @@ async def module_timing_test(dut):
 
 
 def get_module_hdl_files(module):
-    module_dir = Path(SCRIPT_DIR).parent.parent / 'modules' / module
-    return list((module_dir / 'hdl').glob('*.vhd'))
+    module_hdl_dir = Path(SCRIPT_DIR).parent.parent / 'modules' / module / 'hdl'
+    return list(module_hdl_dir.glob('*.vhd'))
 
 
 def print_results(module, passed, failed, time=None):
