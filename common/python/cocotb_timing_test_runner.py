@@ -206,6 +206,16 @@ async def module_timing_test(dut):
         await section_timing_test(dut, timing_ini, test_name)
 
 
+def get_module_build_args(module):
+    module_dir_path = MODULES_PATH / module
+    g = {'TOP_PATH': TOP_PATH}
+    code = open(str(module_dir_path / 'test_config.py')).read()
+    exec(code, g)
+    g.get('EXTRA_BUILD_ARGS', [])
+    extra_args = g.get('EXTRA_BUILD_ARGS', [])
+    return extra_args
+
+
 def get_module_hdl_files(module):
     module_dir_path = MODULES_PATH / module
     g = {'TOP_PATH': TOP_PATH}
