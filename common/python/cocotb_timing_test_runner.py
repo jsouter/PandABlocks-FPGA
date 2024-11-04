@@ -381,7 +381,8 @@ def get_extra_signals_info(module):
     """
     module_dir_path = MODULES_PATH / module
     g = {'TOP_PATH': TOP_PATH}
-    code = open(str(module_dir_path / 'test_config.py')).read()
+    with open(str(module_dir_path / 'test_config.py')) as file:
+        code = file.read()
     exec(code, g)
     extra_signals_info = g.get('EXTRA_SIGNALS_INFO', {})
     return extra_signals_info
@@ -399,24 +400,33 @@ def get_module_build_args(module):
     g = {'TOP_PATH': TOP_PATH}
     code = open(str(module_dir_path / 'test_config.py')).read()
     exec(code, g)
-    extra_args = g.get('EXTRA_BUILD_ARGS', [])
-    return extra_args
+    args = g.get('EXTRA_BUILD_ARGS', [])
+    return args
 
 
 def order_hdl_files(hdl_files, build_dir, top_level):
+    """Put vhdl source files in compilation order. This is neccessary for the
+    nvc simulator as it does not order the files iself before compilation.
+
+    Args:
+        hdl_files: List of vhdl source files.
+        build_dir: Build directory for simulation.
+        top_level: Name of the top-level entity.
+    """
     command = f'vhdeps dump {top_level} -o {TOP_PATH / build_dir / "order"}'
     for file in hdl_files:
         command += f' --include={str(file)}'
+    Path(TOP_PATH / build_dir).mkdir(exist_ok=True)
     os.system(command)
     try:
         with open(TOP_PATH / build_dir / 'order') as order:
             ordered_hdl_files = \
                 [line.strip().split(' ')[-1] for line in order.readlines()]
+        return ordered_hdl_files
     except FileNotFoundError:
         print(f'Likely that the following command failed:\n{command}')
         print('HDL FILES HAVE NOT BEEN PUT INTO COMPILATION ORDER!')
         return hdl_files
-    return ordered_hdl_files
 
 
 def get_module_hdl_files(module, top_level, build_dir):
@@ -604,7 +614,7 @@ async def module_timing_test(dut):
             dut, module, test_name, block_ini, timing_ini, simulator)
 
 
-def get_simulator_build_args(simulator, module):
+def get_simulator_build_args(simulator):
     if simulator == 'ghdl':
         return ['--std=08', '-fsynopsys', '-Wno-hide']
     elif simulator == 'nvc':
@@ -619,7 +629,7 @@ def get_test_args(simulator, build_args, test_name):
         return ['--ieee-warnings=off', f'--wave={test_name}.vcd']
 
 
-def get_plus_args(simulator, test_name):
+def get_plusargs(simulator, test_name):
     test_name = test_name.replace(' ', '_').replace('/', '_')
     vcd_filename = f'{test_name}.vcd'
     if simulator == 'ghdl':
@@ -656,7 +666,7 @@ def test_module(module, test_name=None, simulator='ghdl'):
         sections = timing_ini.sections()
     sim = cocotb.runner.get_runner(simulator)
     build_dir = f'sim_build_{module}'
-    build_args = get_simulator_build_args(simulator, module)
+    build_args = get_simulator_build_args(simulator)
     build_args += get_module_build_args(module)
     top_level = get_module_top_level(module)
     sim.build(sources=get_module_hdl_files(module, top_level, build_dir),
@@ -676,11 +686,11 @@ def test_module(module, test_name=None, simulator='ghdl'):
                                 build_dir=build_dir,
                                 test_args=get_test_args(simulator, build_args,
                                                         test_name),
-                                plusargs=get_plus_args(simulator, test_name),
+                                plusargs=get_plusargs(simulator, test_name),
                                 extra_env={'module': module,
                                            'test_name': test_name,
                                            'simulator': simulator,
-                                           'coverage': 'True'})
+                                           'COVERAGE': 'True'})
             results = cocotb.runner.get_results(xml_path)
             if results == (1, 0):
                 # ran 1 test, 0 failed
