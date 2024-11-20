@@ -323,7 +323,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN  }}
 
       # Mount in rclone bucket from runner into container
-      - name: build autogen
+      - name: Run cocotb tests
         run: |
           docker pull ghcr.io/pandablocks/pandablocks-dev-container:4.0a4
           docker run \
@@ -333,11 +333,8 @@ jobs:
             -v "/scratch/Xilinx:/scratch/Xilinx" \
             ghcr.io/pandablocks/pandablocks-dev-container:4.0a4\
             /bin/bash -c \
-            "cd PandABlocks-fpga && ln -s CONFIG.example CONFIG && make autogen"
-      - name: Run all cocotb tests
-        run: |
-          /bin/bash -c \
-          "cd PandABlocks-fpga && python3 common/python/cocotb_timing_test_runner.py all --sim nvc"
+            "cd PandABlocks-fpga && ln -s CONFIG.example CONFIG && make autogen && \
+            python3 common/python/cocotb_timing_test_runner.py all --sim nvc"
 
   test:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
