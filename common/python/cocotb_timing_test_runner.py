@@ -302,6 +302,8 @@ def cleanup_dir(test_name, build_dir):
     for file in (WORKING_DIR / build_dir).glob(f'{test_name}*'):
         if file.is_file():
             new_name = str(file).split('/')[-1].replace(test_name, '')
+            if new_name.endswith('.vcd'):
+                new_name = 'wave' + new_name
             new_name = new_name.lstrip('_')
             file.rename(WORKING_DIR / build_dir / test_name / new_name)
 
