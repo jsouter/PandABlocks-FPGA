@@ -296,7 +296,7 @@ def merge_coverage_data(build_dir, module, file_paths):
 
 def cleanup_dir(test_name, build_dir):
     test_name = test_name.replace(' ', '_').replace('/', '_')
-    (WORKING_DIR / build_dir / test_name).mkdir()
+    (WORKING_DIR / build_dir / test_name).mkdir(exist_ok=True)
     logger.info(f'Putting all files related to "{test_name}" in {str(
         WORKING_DIR / build_dir / test_name)}')
     for file in (WORKING_DIR / build_dir).glob(f'{test_name}*'):
