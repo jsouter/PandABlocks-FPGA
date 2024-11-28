@@ -344,19 +344,22 @@ def test_module(module, test_name=None, simulator='nvc',
         test_name: Name of specific test to run. If not specified, all tests
             for that module will be run.
     Returns:
-        Lists of tests that passed and failed respectively.
+        Lists of tests that passed and failed respectively, path to coverage.
     """
     timing_ini = get_timing_ini(module)
     if not Path(MODULES_PATH / module).is_dir():
         raise FileNotFoundError('No such directory: \'{}\''.format(
             Path(MODULES_PATH / module)))
     if test_name:
-        if test_name in timing_ini.sections():
-            sections = [test_name]
-        else:
-            print('No test called "{}" in {} INI timing file.'
-                  .format(test_name, module)
-                  .center(shutil.get_terminal_size().columns))
+        sections = []
+        for test in test_name.split(',,'):   # Some test names contain a comma
+            if test in timing_ini.sections():
+                sections.append(test)
+            else:
+                print('No test called "{}" in {} INI timing file.'
+                    .format(test, module)
+                    .center(shutil.get_terminal_size().columns))
+        if not sections:
             return [], [], None
     else:
         sections = timing_ini.sections()
